@@ -15,12 +15,14 @@ import {
     CheckCircle2,
     AlertCircle,
     RefreshCw,
-    XCircle
+    XCircle,
+    Loader2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { GrowthChart } from '@/components/dashboard/GrowthChart';
 import { supabase } from '@/lib/supabase';
 import { useParams } from 'next/navigation';
+import { performResearch } from '@/app/actions/research';
 
 /**
  * Detailed Research View.
@@ -35,6 +37,7 @@ export default function IdeaDetailPage() {
     const id = params.id as string;
     const [idea, setIdea] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [retrying, setRetrying] = useState(false);
 
     useEffect(() => {
         if (id) fetchIdea();
@@ -70,6 +73,50 @@ export default function IdeaDetailPage() {
             setIdea(data);
         }
         setLoading(false);
+    };
+
+    const retryResearch = async () => {
+        if (!idea) return;
+
+        setRetrying(true);
+
+        // Update status to Analyzing
+        await supabase
+            .from('ideas')
+            .update({ status: 'Analyzing' })
+            .eq('id', id);
+
+        setIdea({ ...idea, status: 'Analyzing' });
+
+        try {
+            // Get AI config from localStorage
+            const savedSettings = localStorage.getItem('vault_ai_settings');
+            const aiConfig = savedSettings ? JSON.parse(savedSettings) : {};
+
+            const analysis = await performResearch(idea.title, idea.description, aiConfig);
+
+            await supabase
+                .from('ideas')
+                .update({
+                    status: 'Ready',
+                    analysis_result: analysis
+                })
+                .eq('id', id);
+
+            fetchIdea();
+        } catch (error) {
+            console.error('Retry failed:', error);
+            await supabase
+                .from('ideas')
+                .update({
+                    status: 'Error',
+                    analysis_result: { error: String(error) }
+                })
+                .eq('id', id);
+            fetchIdea();
+        } finally {
+            setRetrying(false);
+        }
     };
 
     if (loading) return <div className="p-8 text-center animate-pulse text-slate-500">Retrieving intelligence...</div>;
@@ -203,11 +250,12 @@ export default function IdeaDetailPage() {
                         </p>
                     </div>
                     <button
-                        onClick={() => window.location.reload()}
-                        className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-colors"
+                        onClick={retryResearch}
+                        disabled={retrying}
+                        className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-colors disabled:opacity-50"
                     >
-                        <RefreshCw size={18} />
-                        Retry Analysis
+                        {retrying ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
+                        {retrying ? 'Retrying...' : 'Retry Analysis'}
                     </button>
                 </div>
             ) : (
@@ -215,6 +263,14 @@ export default function IdeaDetailPage() {
                     <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
                     <p className="text-slate-400 font-medium">Artificial Intelligence is currently synthesizing market data...</p>
                     <p className="text-slate-500 text-sm">This page will update automatically when ready</p>
+                    <button
+                        onClick={retryResearch}
+                        disabled={retrying}
+                        className="mt-4 flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                        {retrying ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                        {retrying ? 'Retrying...' : 'Stuck? Retry Analysis'}
+                    </button>
                 </div>
             )}
         </div>
