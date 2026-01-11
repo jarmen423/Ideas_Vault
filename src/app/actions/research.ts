@@ -8,13 +8,6 @@
 import OpenAI from 'openai';
 import { z } from 'zod';
 
-const openai = new OpenAI({
-    baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
-    apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY, // <--- REPLACE WITH YOUR ENV VAR FROM .ENV
-});
-
-const AI_MODEL = process.env.AI_MODEL || "gpt-4o";
-
 const researchSchema = z.object({
     readinessScore: z.number().min(0).max(100),
     marketSize: z.string(),
