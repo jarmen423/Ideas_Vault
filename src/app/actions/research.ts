@@ -46,11 +46,19 @@ const researchSchema = z.object({
  * @keyTechnologies OpenAI, GPT-4o, Zod
  */
 export async function performResearch(title: string, description: string, config?: { apiKey?: string, baseURL?: string, model?: string }) {
+    console.log('[Research] Starting research for:', title);
+
     const aiConfig = {
         apiKey: config?.apiKey || process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
         baseURL: config?.baseURL || process.env.AI_BASE_URL || "https://api.openai.com/v1",
         model: config?.model || process.env.AI_MODEL || "gpt-4o"
     };
+
+    console.log('[Research] Using config:', {
+        baseURL: aiConfig.baseURL,
+        model: aiConfig.model,
+        hasApiKey: !!aiConfig.apiKey
+    });
 
     const client = new OpenAI({
         apiKey: aiConfig.apiKey,
@@ -76,6 +84,7 @@ export async function performResearch(title: string, description: string, config
     `;
 
     try {
+        console.log('[Research] Calling AI API...');
         const response = await client.chat.completions.create({
             model: aiConfig.model,
             messages: [
@@ -85,13 +94,17 @@ export async function performResearch(title: string, description: string, config
             response_format: { type: "json_object" }
         });
 
+        console.log('[Research] AI response received');
         const content = response.choices[0].message.content;
         if (!content) throw new Error("No response from AI");
 
         const result = JSON.parse(content);
-        return researchSchema.parse(result);
+        console.log('[Research] Parsed result, validating schema...');
+        const validated = researchSchema.parse(result);
+        console.log('[Research] Success! Readiness score:', validated.readinessScore);
+        return validated;
     } catch (error) {
-        console.error("AI Research failed:", error);
+        console.error("[Research] FAILED:", error);
         throw new Error("Failed to process idea with AI");
     }
 }
