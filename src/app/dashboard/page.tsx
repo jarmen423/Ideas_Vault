@@ -6,10 +6,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Settings } from 'lucide-react';
+import { Plus, Settings, HelpCircle } from 'lucide-react';
 import { IdeaCard } from '@/components/dashboard/IdeaCard';
 import { CaptureModal } from '@/components/modals/CaptureModal';
 import { SettingsModal } from '@/components/modals/SettingsModal';
+import { AboutModal } from '@/components/modals/AboutModal';
 import { supabase } from '@/lib/supabase';
 import { performResearch } from '@/app/actions/research';
 
@@ -34,16 +35,27 @@ interface Idea {
 export default function DashboardPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isAboutOpen, setIsAboutOpen] = useState(false);
     const [ideas, setIdeas] = useState<Idea[]>([]);
     const [loading, setLoading] = useState(true);
     const [aiConfig, setAiConfig] = useState<{ apiKey?: string, baseURL?: string, model?: string }>({});
 
     useEffect(() => {
+        const checkAuth = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                window.location.href = '/login';
+                return;
+            }
+            fetchIdeas();
+        };
+
         const savedSettings = localStorage.getItem('vault_ai_settings');
         if (savedSettings) {
             setAiConfig(JSON.parse(savedSettings));
         }
-        fetchIdeas();
+
+        checkAuth();
     }, []);
 
     const fetchIdeas = async () => {
@@ -113,6 +125,13 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex gap-3">
                     <button
+                        onClick={() => setIsAboutOpen(true)}
+                        className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-2xl transition-colors border border-slate-700"
+                        title="About Ideas Vault"
+                    >
+                        <HelpCircle size={20} />
+                    </button>
+                    <button
                         onClick={() => setIsSettingsOpen(true)}
                         className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-2xl transition-colors border border-slate-700"
                         title="AI Settings"
@@ -169,6 +188,11 @@ export default function DashboardPage() {
                 isOpen={isSettingsOpen}
                 onClose={() => setIsSettingsOpen(false)}
                 onSave={setAiConfig}
+            />
+
+            <AboutModal
+                isOpen={isAboutOpen}
+                onClose={() => setIsAboutOpen(false)}
             />
         </div>
     );

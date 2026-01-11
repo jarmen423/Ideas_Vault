@@ -1,6 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist-sans);
+  --color-slate-900: #0f172a;
+  --color-slate-800: #1e293b;
+  --color-slate-700: #334155;
+}
 
 :root {
   --foreground-rgb: 255, 255, 255;
@@ -10,18 +15,23 @@
 
 body {
   color: rgb(var(--foreground-rgb));
+  background: #0f172a;
+  /* Fallback */
   background: rgb(var(--background-start-rgb));
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   overflow-x: hidden;
 }
 
+/* Base layer overrides */
 @layer base {
-  input, textarea {
-    @apply bg-slate-900 border-slate-700 text-white placeholder-slate-500;
+
+  input,
+  textarea {
+    @apply border-slate-700 text-white placeholder-slate-500 bg-slate-900;
   }
 }
 
-/* Custom Scrollbar for premium feel */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -41,6 +51,6 @@ body {
 }
 
 .animate-in {
-    animation-duration: 0.5s;
-    animation-fill-mode: both;
+  animation-duration: 0.5s;
+  animation-fill-mode: both;
 }

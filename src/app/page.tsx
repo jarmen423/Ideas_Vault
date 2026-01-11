@@ -38,7 +38,7 @@ export default function LandingPage() {
         </p>
 
         <Link
-          href="/dashboard"
+          href="/login"
           className="group px-8 py-4 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl font-bold text-lg hover:shadow-2xl hover:shadow-indigo-500/25 transition-all flex items-center gap-3 mx-auto w-fit"
         >
           Open Your Vault
