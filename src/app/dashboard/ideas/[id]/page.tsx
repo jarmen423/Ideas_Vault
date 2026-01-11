@@ -13,7 +13,9 @@ import {
     Share2,
     Download,
     CheckCircle2,
-    AlertCircle
+    AlertCircle,
+    RefreshCw,
+    XCircle
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { GrowthChart } from '@/components/dashboard/GrowthChart';
@@ -24,7 +26,7 @@ import { useParams } from 'next/navigation';
  * Detailed Research View.
  * 
  * Displays the complete AI-generated research packet including market metrics,
- * competitor analysis, and action plans.
+ * competitor analysis, and action plans. Polls for updates while analyzing.
  * 
  * @returns {JSX.Element} The rendered detail page
  */
@@ -38,8 +40,24 @@ export default function IdeaDetailPage() {
         if (id) fetchIdea();
     }, [id]);
 
+    // Poll for updates while status is 'Analyzing'
+    useEffect(() => {
+        if (idea?.status === 'Analyzing') {
+            const interval = setInterval(() => {
+                fetchIdea();
+            }, 3000); // Check every 3 seconds
+
+            return () => clearInterval(interval);
+        }
+    }, [idea?.status]);
+
     const fetchIdea = async () => {
-        setLoading(true);
+        if (!loading) {
+            // Don't show full loading state on poll updates
+        } else {
+            setLoading(true);
+        }
+
         const { data, error } = await supabase
             .from('ideas')
             .select('*')
@@ -58,6 +76,9 @@ export default function IdeaDetailPage() {
     if (!idea) return <div className="p-8 text-center text-slate-500">Concept not found in the vault.</div>;
 
     const analysis = idea.analysis_result || {};
+    const isReady = idea.status === 'Ready';
+    const isError = idea.status === 'Error';
+    const isAnalyzing = idea.status === 'Analyzing';
 
     return (
         <div className="animate-in fade-in zoom-in-95 duration-500 space-y-8">
@@ -78,7 +99,7 @@ export default function IdeaDetailPage() {
                 </div>
             </div>
 
-            {idea.status === 'Ready' ? (
+            {isReady ? (
                 <>
                     {/* Grid Metrics */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -167,12 +188,36 @@ export default function IdeaDetailPage() {
                         </div>
                     </div>
                 </>
+            ) : isError ? (
+                <div className="py-20 flex flex-col items-center justify-center space-y-6">
+                    <div className="p-6 bg-rose-500/10 border border-rose-500/20 rounded-full">
+                        <XCircle size={48} className="text-rose-400" />
+                    </div>
+                    <div className="text-center">
+                        <h3 className="text-xl font-bold text-white mb-2">Research Failed</h3>
+                        <p className="text-slate-400 max-w-md">
+                            The AI agent encountered an issue while analyzing this idea.
+                            {analysis.error && (
+                                <span className="block mt-2 text-rose-400 text-sm">{analysis.error}</span>
+                            )}
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-colors"
+                    >
+                        <RefreshCw size={18} />
+                        Retry Analysis
+                    </button>
+                </div>
             ) : (
                 <div className="py-20 flex flex-col items-center justify-center space-y-4">
                     <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
                     <p className="text-slate-400 font-medium">Artificial Intelligence is currently synthesizing market data...</p>
+                    <p className="text-slate-500 text-sm">This page will update automatically when ready</p>
                 </div>
             )}
         </div>
     );
 }
+
