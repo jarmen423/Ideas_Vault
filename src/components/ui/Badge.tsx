@@ -4,11 +4,11 @@
  */
 
 import React from 'react';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BadgeProps {
-    status: 'Ready' | 'Analyzing' | string;
+    status: 'Ready' | 'Analyzing' | 'Error' | string;
     className?: string;
 }
 
@@ -23,19 +23,22 @@ interface BadgeProps {
  */
 export const Badge = ({ status, className }: BadgeProps) => {
     const isReady = status === "Ready";
+    const isError = status === "Error";
 
     return (
         <div className={cn(
             "px-2.5 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all",
-            isReady
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                : 'bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse',
+            isReady && 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+            isError && 'bg-rose-500/20 text-rose-400 border border-rose-500/30',
+            !isReady && !isError && 'bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse',
             className
         )}>
             {isReady ? (
                 <CheckCircle2 size={12} />
+            ) : isError ? (
+                <XCircle size={12} />
             ) : (
-                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                <Loader2 size={12} className="animate-spin" />
             )}
             {status}
         </div>

@@ -144,7 +144,15 @@ export default function DashboardPage() {
             fetchIdeas();
         } catch (researchError) {
             console.error("Research failed:", researchError);
-            // Handle error state in UI if needed
+            // Update status to show error
+            await supabase
+                .from('ideas')
+                .update({
+                    status: 'Error',
+                    analysis_result: { error: String(researchError) }
+                })
+                .eq('id', newRecord.id);
+            fetchIdeas();
         }
     };
 
