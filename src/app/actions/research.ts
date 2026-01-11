@@ -77,34 +77,54 @@ export async function performResearch(title: string, description: string, config
             "trend": "string (one sentence about current market trend)",
             "growthMetrics": [{ "year": "2024", "value": number }, ... for next 4 years],
             "competitors": [{ "name": "string", "strength": "string", "weakness": "string" }, ... at least 2],
-            "actionPlan": ["string", "string", "string"]
+            \"actionPlan\": [\"string\", \"string\", \"string\"]
         }
         
+        IMPORTANT: Return ONLY valid JSON. No markdown, no explanation, just the JSON object.
         Be realistic, data-driven, and critical yet encouraging.
     `;
 
     try {
         console.log('[Research] Calling AI API...');
+
+        // Note: response_format is OpenAI-specific, removed for compatibility with other providers
         const response = await client.chat.completions.create({
             model: aiConfig.model,
             messages: [
                 { role: "system", content: systemPrompt },
-                { role: "user", content: `Idea Title: ${title}\nIdea Description: ${description}` }
-            ],
-            response_format: { type: "json_object" }
+                { role: "user", content: `Idea Title: ${title}\nIdea Description: ${description}\n\nRespond with ONLY the JSON object, no other text.` }
+            ]
         });
 
         console.log('[Research] AI response received');
         const content = response.choices[0].message.content;
+        console.log('[Research] Raw content length:', content?.length);
+
         if (!content) throw new Error("No response from AI");
 
-        const result = JSON.parse(content);
+        // Try to extract JSON from the response (handle markdown code blocks)
+        let jsonStr = content.trim();
+
+        // Remove markdown code blocks if present
+        if (jsonStr.startsWith('```json')) {
+            jsonStr = jsonStr.slice(7);
+        } else if (jsonStr.startsWith('```')) {
+            jsonStr = jsonStr.slice(3);
+        }
+        if (jsonStr.endsWith('```')) {
+            jsonStr = jsonStr.slice(0, -3);
+        }
+        jsonStr = jsonStr.trim();
+
+        console.log('[Research] Attempting to parse JSON...');
+        const result = JSON.parse(jsonStr);
         console.log('[Research] Parsed result, validating schema...');
         const validated = researchSchema.parse(result);
         console.log('[Research] Success! Readiness score:', validated.readinessScore);
         return validated;
     } catch (error) {
         console.error("[Research] FAILED:", error);
-        throw new Error("Failed to process idea with AI");
+        throw new Error(`Failed to process idea with AI: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
+
