@@ -41,6 +41,25 @@ const messageSchema = z.object({
 });
 
 /**
+ * Schema for founder-fit assessment data.
+ */
+const founderFitSchema = z.object({
+    technicalSkills: z.object({
+        has: z.array(z.string()),
+        needs: z.array(z.string())
+    }),
+    domainExpertise: z.string(),
+    resources: z.object({
+        time: z.string(),
+        capital: z.string(),
+        network: z.string()
+    }),
+    motivation: z.string(),
+    learningPath: z.array(z.string()),
+    hireRecommendations: z.array(z.string())
+});
+
+/**
  * Discovery session schema for database records.
  */
 const sessionSchema = z.object({
@@ -49,7 +68,7 @@ const sessionSchema = z.object({
     user_id: z.string().uuid(),
     messages: z.array(messageSchema),
     current_phase: z.string(),
-    founder_fit: z.any().nullable(),
+    founder_fit: founderFitSchema.nullable(),
     refined_prompt: z.any().nullable(),
     status: z.string(),
     created_at: z.string(),
