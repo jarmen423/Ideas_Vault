@@ -23,6 +23,7 @@ import { GrowthChart } from '@/components/dashboard/GrowthChart';
 import { supabase } from '@/lib/supabase';
 import { useParams } from 'next/navigation';
 import { performResearch } from '@/app/actions/research';
+import { Idea } from '@/types';
 
 /**
  * Detailed Research View.
@@ -35,7 +36,7 @@ import { performResearch } from '@/app/actions/research';
 export default function IdeaDetailPage() {
     const params = useParams();
     const id = params.id as string;
-    const [idea, setIdea] = useState<any>(null);
+    const [idea, setIdea] = useState<Idea | null>(null);
     const [loading, setLoading] = useState(true);
     const [retrying, setRetrying] = useState(false);
 
@@ -69,8 +70,9 @@ export default function IdeaDetailPage() {
 
         if (error) {
             console.error('Error fetching idea:', error);
-        } else {
-            setIdea(data);
+        } else if (data) {
+            // Explicitly casting data to Idea as Supabase types might not be fully generated/in-sync
+            setIdea(data as unknown as Idea);
         }
         setLoading(false);
     };
@@ -188,13 +190,13 @@ export default function IdeaDetailPage() {
                             <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
                                 Market Growth Projection <span className="text-xs font-normal text-slate-500 italic">(Estimated by AI Agent)</span>
                             </h3>
-                            <GrowthChart data={analysis.growthMetrics} />
+                            <GrowthChart data={analysis.growthMetrics || []} />
                         </div>
 
                         <div className="bg-slate-800/40 border border-slate-700/50 p-8 rounded-3xl flex flex-col">
                             <h3 className="text-xl font-bold text-white mb-6">Competitor List</h3>
                             <div className="space-y-6 flex-1">
-                                {analysis.competitors?.map((comp: any, idx: number) => (
+                                {analysis.competitors?.map((comp, idx) => (
                                     <div key={idx} className="space-y-2 pb-4 border-b border-slate-700 last:border-0">
                                         <div className="text-white font-bold">{comp.name}</div>
                                         <div className="flex items-start gap-2 text-xs">
