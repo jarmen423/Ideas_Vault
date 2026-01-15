@@ -255,18 +255,43 @@ export function DiscoveryChat({
 
                 {/* Typing Indicator */}
                 {isLoading && (
-                    <div className="flex gap-3 animate-in fade-in duration-200">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                            <Sparkles size={14} className="text-white" />
-                        </div>
-                        <div className="bg-slate-800 border border-slate-700 rounded-2xl rounded-bl-md px-4 py-3">
-                            <div className="flex gap-1">
-                                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    phase === 'synthesis' ? (
+                        <div className="flex gap-3 animate-in fade-in duration-200 w-full max-w-[85%]">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center animate-pulse">
+                                <Sparkles size={14} className="text-white" />
+                            </div>
+                            <div className="bg-slate-800/80 border border-slate-700/50 rounded-2xl rounded-bl-md px-5 py-4 w-full relative overflow-hidden group">
+                                {/* Shimmer background overlay */}
+                                <div className="absolute inset-0 animate-shimmer pointer-events-none" />
+
+                                {/* Content Skeleton */}
+                                <div className="space-y-3 relative z-10">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Sparkles size={14} className="text-emerald-400 animate-pulse" />
+                                        <span className="text-sm font-medium text-emerald-400 shimmer-text">Synthesizing research prompt...</span>
+                                    </div>
+                                    <div className="space-y-2 opacity-50">
+                                        <div className="h-2 bg-slate-600/50 rounded w-3/4 animate-pulse" style={{ animationDelay: '100ms' }} />
+                                        <div className="h-2 bg-slate-600/50 rounded w-full animate-pulse" style={{ animationDelay: '200ms' }} />
+                                        <div className="h-2 bg-slate-600/50 rounded w-5/6 animate-pulse" style={{ animationDelay: '300ms' }} />
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="flex gap-3 animate-in fade-in duration-200">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                                <Sparkles size={14} className="text-white" />
+                            </div>
+                            <div className="bg-slate-800 border border-slate-700 rounded-2xl rounded-bl-md px-4 py-3">
+                                <div className="flex gap-1">
+                                    <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                    <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                    <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                </div>
+                            </div>
+                        </div>
+                    )
                 )}
 
                 <div ref={messagesEndRef} />
