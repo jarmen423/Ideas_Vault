@@ -12,14 +12,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Sparkles, Loader2 } from 'lucide-react';
+import { X, Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import { DiscoveryChat } from '@/components/discovery/DiscoveryChat';
 import { PromptPreview } from '@/components/discovery/PromptPreview';
 import { FounderFitCard } from '@/components/discovery/FounderFitCard';
 import {
     startDiscoverySession,
     sendDiscoveryMessage,
-    getDiscoverySession,
+    getActiveDiscoverySessions,
     skipDiscovery
 } from '@/app/actions/discovery';
 
@@ -80,21 +80,50 @@ export function DiscoveryModal({
     const initializeSession = async () => {
         try {
             setStage('loading');
-            const result = await startDiscoverySession(
-                userId,
-                existingIdeaId,
-                existingIdeaData
-            );
 
-            setSessionId(result.session.id);
-            setMessages(result.session.messages || []);
-            setCurrentPhase(result.session.current_phase);
-            setStage('chat');
+            // Check for existing active sessions first
+            const activeSessions = await getActiveDiscoverySessions(userId);
+
+            let sessionToResume = null;
+
+            if (existingIdeaId) {
+                // If working on specific idea, look for its session
+                sessionToResume = activeSessions.find(s => s.idea_id === existingIdeaId);
+            } else {
+                // If new idea, look for most recent unlinked session
+                sessionToResume = activeSessions.find(s => !s.idea_id);
+            }
+
+            if (sessionToResume) {
+                console.log('Resuming session:', sessionToResume.id);
+                setSessionId(sessionToResume.id);
+                setMessages(sessionToResume.messages || []);
+                setCurrentPhase(sessionToResume.current_phase);
+                setStage('chat');
+                return;
+            }
+
+            // If no session to resume, start new one
+            await startNewSession();
+
         } catch (err) {
             console.error('Failed to initialize discovery session:', err);
             setError('Failed to start discovery session. Please try again.');
             setStage('loading');
         }
+    };
+
+    const startNewSession = async () => {
+        const result = await startDiscoverySession(
+            userId,
+            existingIdeaId,
+            existingIdeaData
+        );
+
+        setSessionId(result.session.id);
+        setMessages(result.session.messages || []);
+        setCurrentPhase(result.session.current_phase);
+        setStage('chat');
     };
 
     const handleSendMessage = async (sessionId: string, message: string) => {
@@ -163,13 +192,31 @@ export function DiscoveryModal({
                             </p>
                         </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        disabled={stage === 'loading'}
-                        className="p-2 hover:bg-white/20 rounded-xl transition-colors disabled:opacity-50"
-                    >
-                        <X size={20} className="text-white" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {stage === 'chat' && (
+                            <button
+                                onClick={async () => {
+                                    if (confirm('Start a new session? Current progress will be lost.')) {
+                                        // Wait for loading state to clear if needed, then start new
+                                        setStage('loading');
+                                        if (sessionId) await skipDiscovery(sessionId); // clean up old one
+                                        await startNewSession();
+                                    }
+                                }}
+                                className="p-2 hover:bg-white/20 rounded-xl transition-colors text-white/70 hover:text-white"
+                                title="Start Over"
+                            >
+                                <RefreshCw size={18} />
+                            </button>
+                        )}
+                        <button
+                            onClick={onClose}
+                            disabled={stage === 'loading'}
+                            className="p-2 hover:bg-white/20 rounded-xl transition-colors disabled:opacity-50"
+                        >
+                            <X size={20} className="text-white" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Content */}

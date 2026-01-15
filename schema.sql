@@ -64,5 +64,28 @@ CREATE POLICY "Users can update their own discovery sessions" ON public.discover
 UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete their own discovery sessions" ON public.discovery_sessions FOR DELETE USING (auth.uid() = user_id);
 -- 7. Storage Setup (Optional for MVP placeholders)
--- In a real scenario, you'd create buckets for voice and image:
--- insert into storage.buckets (id, name) values ('vault-assets', 'vault-assets');
+-- 7. Storage Setup
+INSERT INTO storage.buckets (id, name, public) VALUES ('vault-assets', 'vault-assets', false);
+
+-- Enable RLS on objects
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Users can upload their own assets
+CREATE POLICY "Users can upload their own assets"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'vault-assets' AND auth.uid() = owner);
+
+-- Policy: Users can view their own assets
+CREATE POLICY "Users can view their own assets"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'vault-assets' AND auth.uid() = owner);
+
+-- Policy: Users can update their own assets
+CREATE POLICY "Users can update their own assets"
+ON storage.objects FOR UPDATE
+USING (bucket_id = 'vault-assets' AND auth.uid() = owner);
+
+-- Policy: Users can delete their own assets
+CREATE POLICY "Users can delete their own assets"
+ON storage.objects FOR DELETE
+USING (bucket_id = 'vault-assets' AND auth.uid() = owner);
