@@ -15,6 +15,7 @@ export interface AnalysisResult {
   }>;
   actionPlan?: string[];
   error?: string;
+  tags?: string[];
 }
 
 export type IdeaStatus = 'Analyzing' | 'Ready' | 'Discovery' | 'Error';
@@ -27,10 +28,10 @@ export interface Idea {
   id: string;
   user_id: string;
   title: string;
-  description: string;
-  input_type: IdeaInputType;
-  status: IdeaStatus;
-  capture_mode: IdeaCaptureMode;
+  description: string | null;
+  input_type: IdeaInputType | null;
+  status: IdeaStatus | null;
+  capture_mode: IdeaCaptureMode | null;
   discovery_session_id: string | null;
   analysis_result: AnalysisResult | null;
   created_at: string;

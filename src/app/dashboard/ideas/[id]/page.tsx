@@ -71,8 +71,7 @@ export default function IdeaDetailPage() {
         if (error) {
             console.error('Error fetching idea:', error);
         } else if (data) {
-            // Explicitly casting data to Idea as Supabase types might not be fully generated/in-sync
-            setIdea(data as unknown as Idea);
+            setIdea(data as Idea);
         }
         setLoading(false);
     };
@@ -95,7 +94,7 @@ export default function IdeaDetailPage() {
             const savedSettings = localStorage.getItem('vault_ai_settings');
             const aiConfig = savedSettings ? JSON.parse(savedSettings) : {};
 
-            const analysis = await performResearch(idea.title, idea.description, aiConfig);
+            const analysis = await performResearch(idea.title, idea.description || '', aiConfig);
 
             await supabase
                 .from('ideas')
@@ -134,7 +133,7 @@ export default function IdeaDetailPage() {
             {/* Detail Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="flex-1">
-                    <Badge status={idea.status} />
+                    <Badge status={idea.status || 'Analyzing'} />
                     <h1 className="text-4xl font-extrabold text-white mt-4 mb-2">{idea.title}</h1>
                     <p className="text-slate-400 max-w-2xl leading-relaxed">{idea.description}</p>
                 </div>
