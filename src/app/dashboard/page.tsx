@@ -106,8 +106,14 @@ export default function DashboardPage() {
      */
     const handleAddIdea = async (data: { title: string; description: string; type: string }) => {
         // 1. Insert placeholder/initial record
-        const { data: userData } = await supabase.auth.getUser();
-        const userId = userData?.user?.id;
+        let currentUserId = userId;
+
+        if (!currentUserId) {
+            const { data: userData } = await supabase.auth.getUser();
+            currentUserId = userData?.user?.id;
+        }
+
+        if (!currentUserId) throw new Error("User not authenticated");
 
         const { data: newRecord, error } = await supabase
             .from('ideas')
@@ -117,7 +123,7 @@ export default function DashboardPage() {
                 input_type: data.type.charAt(0).toUpperCase() + data.type.slice(1),
                 status: 'Analyzing',
                 capture_mode: 'quick',
-                user_id: userId
+                user_id: currentUserId
             }])
             .select()
             .single();
@@ -161,8 +167,17 @@ export default function DashboardPage() {
      * Uses the refined prompt from discovery to trigger research.
      */
     const handleDiscoveryComplete = async (synthesisOutput: any) => {
-        const { data: userData } = await supabase.auth.getUser();
-        const userId = userData?.user?.id;
+        let currentUserId = userId;
+
+        if (!currentUserId) {
+            const { data: userData } = await supabase.auth.getUser();
+            currentUserId = userData?.user?.id;
+        }
+
+        if (!currentUserId) {
+            console.error("User not authenticated");
+            return;
+        }
 
         // Extract title and description from synthesis
         const title = synthesisOutput.tldr?.refinedIdea || pendingIdeaData?.title || 'Untitled Idea';
@@ -177,7 +192,7 @@ export default function DashboardPage() {
                 input_type: 'Text',
                 status: 'Analyzing',
                 capture_mode: 'discovery',
-                user_id: userId
+                user_id: currentUserId
             }])
             .select()
             .single();
