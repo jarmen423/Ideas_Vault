@@ -14,17 +14,7 @@ import { AboutModal } from '@/components/modals/AboutModal';
 import { DiscoveryModal } from '@/components/modals/DiscoveryModal';
 import { supabase } from '@/lib/supabase';
 import { performResearch } from '@/app/actions/research';
-
-interface Idea {
-    id: string;
-    title: string;
-    description: string;
-    input_type: string;
-    status: string;
-    capture_mode?: string;
-    analysis_result: any;
-    created_at: string;
-}
+import { Idea } from '@/types';
 
 interface AIConfig {
     apiKey?: string;
@@ -302,9 +292,9 @@ Key Hypotheses: ${synthesisOutput.fullPrompt?.hypotheses?.join(', ') || 'None'}
                             idea={{
                                 id: idea.id,
                                 title: idea.title,
-                                description: idea.description,
+                                description: idea.description || '',
                                 inputType: idea.input_type || 'Text',
-                                status: idea.status,
+                                status: idea.status || 'Analyzing',
                                 tags: idea.analysis_result?.tags || ["#Processing"]
                             }}
                         />
