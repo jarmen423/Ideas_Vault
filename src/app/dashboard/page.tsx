@@ -146,19 +146,30 @@ export default function DashboardPage() {
                 })
                 .eq('id', newRecord.id);
 
-            // Refresh list
-            fetchIdeas();
+            // Update local state instead of refetching
+            setIdeas(prev => prev.map(idea =>
+                idea.id === newRecord.id
+                    ? { ...idea, status: 'Ready', analysis_result: analysis }
+                    : idea
+            ));
         } catch (researchError) {
             console.error("Research failed:", researchError);
+            const errorPayload = { error: String(researchError) };
             // Update status to show error
             await supabase
                 .from('ideas')
                 .update({
                     status: 'Error',
-                    analysis_result: { error: String(researchError) }
+                    analysis_result: errorPayload
                 })
                 .eq('id', newRecord.id);
-            fetchIdeas();
+
+            // Update local state instead of refetching
+            setIdeas(prev => prev.map(idea =>
+                idea.id === newRecord.id
+                    ? { ...idea, status: 'Error', analysis_result: errorPayload }
+                    : idea
+            ));
         }
     };
 
