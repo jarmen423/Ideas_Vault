@@ -29,7 +29,7 @@ import { Idea } from '@/types';
  * Detailed Research View.
  * 
  * Displays the complete AI-generated research packet including market metrics,
- * competitor analysis, and action plans. Polls for updates while analyzing.
+ * competitor analysis, and action plans.
  * 
  * @returns {JSX.Element} The rendered detail page
  */
@@ -44,16 +44,6 @@ export default function IdeaDetailPage() {
         if (id) fetchIdea();
     }, [id]);
 
-    // Poll for updates while status is 'Analyzing'
-    useEffect(() => {
-        if (idea?.status === 'Analyzing') {
-            const interval = setInterval(() => {
-                fetchIdea();
-            }, 3000); // Check every 3 seconds
-
-            return () => clearInterval(interval);
-        }
-    }, [idea?.status]);
 
     const fetchIdea = async () => {
         if (!loading) {
