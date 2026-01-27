@@ -218,9 +218,9 @@ export function DiscoveryChat({
 
             {/* Messages Container */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((message, index) => (
+                {messages.map((message) => (
                     <div
-                        key={index}
+                        key={message.timestamp}
                         className={cn(
                             "flex gap-3 animate-in slide-in-from-bottom-2 duration-300",
                             message.role === 'user' ? 'justify-end' : 'justify-start'
